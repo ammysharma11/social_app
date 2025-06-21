@@ -1,48 +1,64 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/Signup.jsx
+import React, { useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [pw, setPw]       = useState('');
-  const { signup }        = useAuth();
-  const navigate          = useNavigate();
+  const emailRef = useRef();
+  const passwordRef = useRef();
+  const { signup } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      await signup(email, pw);
-      navigate('/'); // go to feed
+      await signup(emailRef.current.value, passwordRef.current.value);
+      navigate('/profile');
     } catch (err) {
-      setError(err.message);
+      setError('Failed to create an account');
+      console.error(err);
     }
+    setLoading(false);
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="email" 
-          placeholder="Email" 
-          value={email}
-          onChange={e => setEmail(e.target.value)}
+    <div className="hero-night">
+      <div className="arc"></div>
+      <h1>
+        Revolutionize <span className="accent">Connection</span>
+      </h1>
+      <p>Join the community and start sharing your thoughts.</p>
+
+      <form onSubmit={handleSubmit} className="login-neon">
+        <h3>Sign Up</h3>
+
+        {error && <p style={{ color: 'salmon' }}>{error}</p>}
+
+        <input
+          className="input"
+          placeholder="Email"
+          type="email"
+          ref={emailRef}
           required
         />
-        <input 
-          type="password" 
-          placeholder="Password" 
-          value={pw}
-          onChange={e => setPw(e.target.value)}
+        <input
+          className="input"
+          placeholder="Password"
+          type="password"
+          ref={passwordRef}
           required
         />
-        <button type="submit">Sign Up</button>
+        <button className="btn" disabled={loading}>
+          Sign Up
+        </button>
+        <p style={{ marginTop: '1rem' }}>
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
       </form>
-      <p>
-        Already have an account? <a href="/login">Log in</a>
-      </p>
     </div>
   );
 }
