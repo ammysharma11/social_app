@@ -1,0 +1,74 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero-bg {
+  min-height: 100vh;                         /* full viewport */
+  background: radial-gradient(90% 70% at 50% 0%,
+              rgba(91, 91, 214, 0.25) 0%,
+              rgba(91, 91, 214, 0.05) 60%,
+              transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+/* glassy login card */
+.login-card {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 14px;
+  padding: 2rem 2.5rem;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  animation: fadeUp .6s ease-out both;
+}
+
+.login-card h3 {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+}
+
+.login-card .input {
+  margin-bottom: 1rem;
+}
