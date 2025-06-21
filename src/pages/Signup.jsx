@@ -1,4 +1,3 @@
-// src/pages/Signup.jsx
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +7,7 @@ export default function Signup() {
   const passwordRef = useRef();
   const { signup } = useAuth();
   const navigate = useNavigate();
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,13 +15,25 @@ export default function Signup() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
       await signup(emailRef.current.value, passwordRef.current.value);
       navigate('/profile');
     } catch (err) {
-      setError('Failed to create an account');
-      console.error(err);
+      console.error("🔥 Firebase SignUp Error:", err.code, err.message);
+
+      // Friendly error messages
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Try logging in.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else {
+        setError('Failed to create an account. Please try again later.');
+      }
     }
+
     setLoading(false);
   };
 
@@ -52,9 +64,11 @@ export default function Signup() {
           ref={passwordRef}
           required
         />
+
         <button className="btn" disabled={loading}>
-          Sign Up
+          {loading ? 'Creating account...' : 'Sign Up'}
         </button>
+
         <p style={{ marginTop: '1rem' }}>
           Already have an account? <Link to="/login">Log in</Link>
         </p>
