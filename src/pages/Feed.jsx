@@ -1,4 +1,4 @@
-// src/pages/Feed.jsx
+
 import React, { useEffect, useState } from 'react';
 import {
   collection,
@@ -7,84 +7,80 @@ import {
   orderBy,
   doc,
   updateDoc,
-  increment,
-  getDoc
+  increment
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 import PostCard from '../components/PostCard';
-import Loader from '../components/Loader';
+import Loader   from '../components/Loader';
 
 export default function Feed() {
-  const [posts, setPosts] = useState([]);
+  const { user } = useAuth();
+  const [posts, setPosts]     = useState([]);
+  const [clapped, setClapped] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Real‑time listener with author enrichment
+  // Load posts and read clap state from localStorage
   useEffect(() => {
-    const q = query(
-      collection(db, 'posts'),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, async snapshot => {
-      const enriched = await Promise.all(
-        snapshot.docs.map(async postSnap => {
-          const postData = postSnap.data();
-          let author = { name: 'Anonymous', photoURL: '' };
-
-          try {
-            const profSnap = await getDoc(
-              doc(db, 'profiles', postData.authorId)
-            );
-            if (profSnap.exists()) {
-              const pd = profSnap.data();
-              author = {
-                name: pd.name || 'Anonymous',
-                photoURL: pd.photoURL || ''
-              };
-            }
-          } catch (err) {
-            console.error('Profile load error:', err);
-          }
-
-          return { id: postSnap.id, ...postData, author };
-        })
-      );
-
-      setPosts(enriched);
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, snap => {
+      setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const stored = localStorage.getItem('claps');
+    if (stored) setClapped(JSON.parse(stored));
+
+    return unsub;
   }, []);
 
-  // Clap handler: optimistic UI + Firestore update
-  const handleClap = async id => {
-    // Optimistically update
-    setPosts(prev => prev.map(p => 
-      p.id === id ? { ...p, claps: (p.claps || 0) + 1 } : p
-    ));
+  // Toggle-clap handler
+  const handleClap = async postId => {
+    if (!user) return;
 
+    const hasClapped = !!clapped[postId];
+
+    // Optimistic UI update
+    setPosts(ps =>
+      ps.map(p =>
+        p.id === postId
+          ? { ...p, claps: p.claps + (hasClapped ? -1 : +1) }
+          : p
+      )
+    );
+
+    // Update localStorage state
+    const next = { ...clapped };
+    if (hasClapped) {
+      delete next[postId];
+    } else {
+      next[postId] = true;
+    }
+    setClapped(next);
+    localStorage.setItem('claps', JSON.stringify(next));
+
+    // Persist to Firestore
     try {
-      await updateDoc(doc(db, 'posts', id), { claps: increment(1) });
+      await updateDoc(doc(db, 'posts', postId), {
+        claps: increment(hasClapped ? -1 : +1)
+      });
     } catch (e) {
       console.error('Clap update failed:', e);
-      // Optionally revert on failure
+      // (Optional) revert UI/localStorage on failure
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-        <Loader />
-      </div>
-    );
-  }
+  if (loading) return <Loader />;
 
   return (
     <div className="layout">
       {posts.length === 0 && <p>No posts yet.</p>}
-      {posts.map(post => (
-        <PostCard key={post.id} post={post} onClap={handleClap} />
+      {posts.map(p => (
+        <PostCard
+          key={p.id}
+          post={{ ...p, userClapped: !!clapped[p.id] }}
+          onClap={() => handleClap(p.id)}
+        />
       ))}
     </div>
   );
