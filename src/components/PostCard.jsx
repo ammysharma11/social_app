@@ -1,34 +1,29 @@
+
 import React from 'react';
 
 export default function PostCard({ post, onClap }) {
   if (!post) return null;
 
   const {
-    id,
-    content = '',
-    imageURL = '',
-    claps = 0,
+    content    = '',
+    imageURL   = '',
+    claps      = 0,
     createdAt,
-    author
+    author     = {},
+    userClapped
   } = post;
 
-  // use real photoURL or fallback to initials avatar
+  // Avatar fallback
   const avatarSrc = author.photoURL
     ? author.photoURL
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        author.name
+        author.name || 'Anonymous'
       )}&background=27272f&color=ffffff&rounded=true`;
 
   return (
     <div className="card-dark" style={{ marginBottom: 16 }}>
-      {/* Author header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: 12
-        }}
-      >
+      {/* Author */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
         <img
           src={avatarSrc}
           alt={author.name}
@@ -41,16 +36,16 @@ export default function PostCard({ post, onClap }) {
           }}
         />
         <strong style={{ color: '#fff' }}>
-          {author.name}
+          {author.name || 'Anonymous'}
         </strong>
       </div>
 
-      {/* Post content */}
+      {/* Content */}
       <p style={{ whiteSpace: 'pre-wrap', fontSize: 17, marginBottom: 12 }}>
         {content}
       </p>
 
-      {/* Post image if any */}
+      {/* Image */}
       {imageURL && (
         <img
           src={imageURL}
@@ -62,14 +57,19 @@ export default function PostCard({ post, onClap }) {
 
       {/* Timestamp */}
       <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
-        {createdAt &&
-          new Date(createdAt.toDate()).toLocaleString()}
+        {createdAt && new Date(createdAt.toDate()).toLocaleString()}
       </div>
 
-      {/* Clap button */}
+      {/* Clap Button */}
       <button
+        onClick={onClap}
         className="btn btn-clap"
-        onClick={() => onClap(id)}
+        style={{
+          background: userClapped
+            ? 'var(--clr-primary)'
+            : 'rgba(99,102,241,.12)',
+          color: userClapped ? '#fff' : 'var(--clr-primary)'
+        }}
       >
         👏 <span>{claps}</span>
       </button>
